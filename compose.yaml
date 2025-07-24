@@ -1,0 +1,21 @@
+services:
+  bot:
+    build:
+      context: .
+    restart: never
+    environment:
+      # Minecraft Bot
+      - STATE_DIR=${STATE_DIR}
+      - USERNAME=${USERNAME}
+      - API_KEY=${API_KEY}
+
+      # Discord Bot
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - CHANNEL_ID=${CHANNEL_ID}
+      - GUILD_ID=${GUILD_ID}
+      - TOKEN=${TOKEN}
+    volumes:
+      - state:/app/state
+
+volumes:
+  state:
