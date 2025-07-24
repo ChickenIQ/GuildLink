@@ -9,7 +9,7 @@ on:
 env:
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   IMAGE_NAME: "${{ github.event.repository.name }}"
-  IMAGE_TAG: "${{ inputs.variant }}"
+  IMAGE_TAG: "latest"
 
 jobs:
   build:
