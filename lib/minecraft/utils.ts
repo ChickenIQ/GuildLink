@@ -1,7 +1,14 @@
 import cache from "memory-cache";
 
-export const getUUID = async (username: string) => {
-  let data = cache.get(`uuid:${username}`);
+export interface MinecraftProfile {
+  name: string;
+  uuid: string;
+}
+
+export const getMinecraftProfile = async (
+  username: string
+): Promise<MinecraftProfile> => {
+  let data = cache.get(`mc:${username}`);
   if (data) return data;
 
   const res = await fetch(
@@ -12,9 +19,12 @@ export const getUUID = async (username: string) => {
     throw new Error(`Failed to fetch UUID (${res.status}): ${res.statusText}`);
   }
 
-  data = ((await res.json()) as { id: string }).id;
+  data = await res.json();
   if (!data) throw new Error(`UUID not found for username: ${username}`);
 
-  cache.put(`uuid:${username}`, data, 30 * 60 * 1000);
-  return data;
+  cache.put(`mc:${username}`, data, 30 * 60 * 1000);
+  return {
+    name: data.name,
+    uuid: data.id,
+  };
 };

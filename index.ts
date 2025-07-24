@@ -1,6 +1,6 @@
 import { getReferencedUsername } from "./lib/discord/utils";
 import { HypixelAPIHandler } from "./lib/hypixel/api";
-import { getUUID } from "./lib/minecraft/utils";
+import { getMinecraftProfile } from "./lib/minecraft/utils";
 import { DiscordBot } from "./lib/discord/bot";
 import { GuildBot } from "./lib/minecraft/bot";
 import safe from "./lib/generic/safe";
@@ -32,7 +32,7 @@ discordBot.onMessage(async (message) => {
 });
 
 guildBot.onMessage(async (message) => {
-  const uuid = await getUUID(message.author);
+  const { uuid } = await getMinecraftProfile(message.author);
   if (!uuid) return;
 
   const [err, user] = await safe(hypixelAPI.getDiscordUsername(uuid));
@@ -42,23 +42,18 @@ guildBot.onMessage(async (message) => {
 });
 
 guildBot.onCommand(["nw", "networth"], async (username, args) => {
-  const user = args[0] || username;
-  const uuid = await getUUID(user);
-  if (!uuid) return;
-
-  const [err, nw] = await safe(hypixelAPI.getNetworth(uuid));
+  const mc = await getMinecraftProfile(args[0] || username);
+  const [err, nw] = await safe(hypixelAPI.getNetworth(mc.uuid));
   if (err) return console.error("Error fetching networth:", err);
 
-  return guildBot.sendCommand(`/gc Networth for ${user}: ${nw}`);
+  return guildBot.sendCommand(`/gc Networth for ${mc.name}: ${nw}`);
 });
 
 guildBot.onCommand(["cata", "catacombs"], async (username, args) => {
-  const user = args[0] || username;
-  const uuid = await getUUID(user);
-  if (!uuid) return;
+  const mc = await getMinecraftProfile(args[0] || username);
 
-  const [err, cata] = await safe(hypixelAPI.getCatacombsLevel(uuid));
+  const [err, cata] = await safe(hypixelAPI.getCatacombsLevel(mc.uuid));
   if (err) return console.error("Error fetching catacombs data:", err);
 
-  return guildBot.sendCommand(`/gc Catacombs Level for ${user}: ${cata}`);
+  return guildBot.sendCommand(`/gc Catacombs Level for ${mc.name}: ${cata}`);
 });

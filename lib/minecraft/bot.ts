@@ -38,6 +38,16 @@ export class GuildBot {
     this.client.once("spawn", () => {
       console.log("Minecraft Bot ready!");
     });
+
+    this.client.on("error", (err) => {
+      console.error("Minecraft Bot error:", err);
+      process.exit(1);
+    });
+
+    this.client.on("end", () => {
+      console.error("Minecraft Bot disconnected, exiting...");
+      process.exit(1);
+    });
   }
 
   onCommand(
