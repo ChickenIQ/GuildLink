@@ -76,8 +76,8 @@ guildBot.onCommand(["lvl", "level"], async (username, args) => {
   return guildBot.sendCommand(`/gc Skyblock Level for ${mc.name}: ${level}`);
 });
 
-guildBot.onCommand(["check", "checkplayer"], async (_, args) => {
-  const mc = await getMinecraftProfile(args[0]!);
+guildBot.onCommand(["check", "checkplayer"], async (username, args) => {
+  const mc = await getMinecraftProfile(args[0] || username);
   if (!mc) return;
 
   const cata = await hypixelAPI.getCatacombsLevel(mc.uuid);
