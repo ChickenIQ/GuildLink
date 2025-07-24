@@ -86,7 +86,8 @@ guildBot.onCommand(["check", "checkplayer"], async (_, args) => {
 
   if (!cata || !sb || !nw) return;
   const nwText = numberToHuman(nw);
-  const stats = `Skyblock Level: ${sb}, Catacombs Level: ${cata}, Networth: ${nwText}`;
+  const cataText = cata.toFixed(2);
+  const stats = `Skyblock Level: ${sb}, Catacombs Level: ${cataText}, Networth: ${nwText}`;
 
   if (sb < 250 && nw < 9_000_000_000 && cata < 44) {
     return guildBot.sendCommand(
