@@ -22,9 +22,11 @@ export const getMinecraftProfile = async (
   data = await res.json();
   if (!data) throw new Error(`UUID not found for username: ${username}`);
 
-  cache.put(`mc:${username}`, data, 30 * 60 * 1000);
-  return {
+  const playerData = {
     name: data.name,
     uuid: data.id,
   };
+
+  cache.put(`mc:${username}`, playerData, 30 * 60 * 1000);
+  return playerData;
 };
