@@ -1,9 +1,10 @@
 import { getReferencedUsername } from "./lib/discord/utils";
-import { HypixelAPIHandler } from "./lib/hypixel/api";
 import { getMinecraftProfile } from "./lib/minecraft/utils";
+import { HypixelAPIHandler } from "./lib/hypixel/api";
 import { DiscordBot } from "./lib/discord/bot";
 import { GuildBot } from "./lib/minecraft/bot";
 import safe from "./lib/generic/safe";
+import { numberToHuman } from "./lib/generic/math";
 
 // Fix this later...
 if (!process.env.WEBHOOK_URL) throw new Error("$WEBHOOK_URL is not set!");
@@ -43,17 +44,57 @@ guildBot.onMessage(async (message) => {
 
 guildBot.onCommand(["nw", "networth"], async (username, args) => {
   const mc = await getMinecraftProfile(args[0] || username);
+  if (!mc) return;
+
   const [err, nw] = await safe(hypixelAPI.getNetworth(mc.uuid));
   if (err) return console.error("Error fetching networth:", err);
 
-  return guildBot.sendCommand(`/gc Networth for ${mc.name}: ${nw}`);
+  return guildBot.sendCommand(
+    `/gc Networth for ${mc.name}: ${numberToHuman(nw)}`
+  );
 });
 
 guildBot.onCommand(["cata", "catacombs"], async (username, args) => {
   const mc = await getMinecraftProfile(args[0] || username);
+  if (!mc) return;
 
   const [err, cata] = await safe(hypixelAPI.getCatacombsLevel(mc.uuid));
   if (err) return console.error("Error fetching catacombs data:", err);
 
-  return guildBot.sendCommand(`/gc Catacombs Level for ${mc.name}: ${cata}`);
+  return guildBot.sendCommand(
+    `/gc Catacombs Level for ${mc.name}: ${cata!.toFixed(2)}`
+  );
+});
+
+guildBot.onCommand(["lvl", "level"], async (username, args) => {
+  const mc = await getMinecraftProfile(args[0] || username);
+  if (!mc) return;
+
+  const [err, level] = await safe(hypixelAPI.getSkyblockLevel(mc.uuid));
+  if (err) return console.error("Error fetching Skyblock level:", err);
+
+  return guildBot.sendCommand(`/gc Skyblock Level for ${mc.name}: ${level}`);
+});
+
+guildBot.onCommand(["check", "checkplayer"], async (_, args) => {
+  const mc = await getMinecraftProfile(args[0]!);
+  if (!mc) return;
+
+  const cata = await hypixelAPI.getCatacombsLevel(mc.uuid);
+  const sb = await hypixelAPI.getSkyblockLevel(mc.uuid);
+  const nw = await hypixelAPI.getNetworth(mc.uuid);
+
+  if (!cata || !sb || !nw) return;
+  const nwText = numberToHuman(nw);
+  const stats = `Skyblock Level: ${sb}, Catacombs Level: ${cata}, Networth: ${nwText}`;
+
+  if (sb < 250 && nw < 9_000_000_000 && cata < 44) {
+    return guildBot.sendCommand(
+      `/gc ${mc.name} does not meet the requirements: ${stats}`
+    );
+  }
+
+  return guildBot.sendCommand(
+    `/gc ${mc.name} meets the requirements: ${stats}`
+  );
 });

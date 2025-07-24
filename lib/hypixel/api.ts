@@ -72,7 +72,17 @@ export class HypixelAPIHandler {
       profile.banking?.balance
     );
 
-    return numberToHuman((await networthManager.getNetworth()).networth);
+    return (await networthManager.getNetworth()).networth;
+  }
+
+  async getSkyblockLevel(uuid: string) {
+    const profile = await this.getSkyblockProfile(uuid);
+    if (!profile) return;
+
+    const data = profile.members[uuid];
+    if (!data || !data.leveling) return;
+
+    return data.leveling.experience / 100;
   }
 
   async getCatacombsLevel(uuid: string) {
@@ -83,6 +93,6 @@ export class HypixelAPIHandler {
     const xp = dungeons?.experience;
     if (!dungeons || !xp) return;
 
-    return calcXpCatacombs(xp).toFixed(2);
+    return calcXpCatacombs(xp);
   }
 }
