@@ -17,7 +17,7 @@ export class HypixelAPIHandler {
 
     if (!res.ok) {
       throw new Error(
-        `Failed to fetch data (${res.status}): ${res.statusText}`
+        `Failed to fetch data from ${url} (${res.status}): ${res.statusText}`
       );
     }
 
