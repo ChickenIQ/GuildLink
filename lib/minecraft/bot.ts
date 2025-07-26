@@ -68,7 +68,7 @@ export class GuildBot {
 
       const data = await callback(message.author, parts.slice(1));
       if (data instanceof Error) {
-        return console.error("Error in command handler:", data);
+        return console.error(data.message);
       }
 
       return this.sendCommand(`/gc ${data}`);

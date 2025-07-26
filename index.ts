@@ -93,5 +93,5 @@ guildBot.onCommand(["check", "checkplayer"], async (username, args) => {
     return `${mc.name} does not meet the requirements: ${stats}`;
   }
 
-  return `/gc ${mc.name} meets the requirements: ${stats}`;
+  return `${mc.name} meets the requirements: ${stats}`;
 });

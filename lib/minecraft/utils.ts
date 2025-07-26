@@ -16,7 +16,9 @@ export const getMinecraft = async (
   );
 
   if (!res.ok) {
-    return new Error(`Failed to fetch UUID (${res.status}): ${res.statusText}`);
+    return new Error(
+      `Failed to fetch UUID for ${username} (${res.status}): ${res.statusText}`
+    );
   }
 
   data = await res.json();
