@@ -1,7 +1,7 @@
 import { ProfileNetworthCalculator } from "skyhelper-networth";
+import { isErr, safe } from "../generic/safe";
 import { calcXpCatacombs } from "./utils";
 import cache from "memory-cache";
-import { isErr, safe } from "../generic/safe";
 
 export class HypixelAPIHandler {
   private apiKey: string;

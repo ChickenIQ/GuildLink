@@ -42,7 +42,7 @@ guildBot.onMessage(async (message) => {
   return discordBot.sendMessageAsUser(user, message.content);
 });
 
-guildBot.onCommand(["nw", "networth"], async (username, args) => {
+guildBot.registerCommand(["nw", "networth"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
   if (isErr(mc)) return mc;
 
@@ -52,7 +52,7 @@ guildBot.onCommand(["nw", "networth"], async (username, args) => {
   return `Networth for ${mc.name}: ${numberToHuman(nw)}`;
 });
 
-guildBot.onCommand(["cata", "catacombs"], async (username, args) => {
+guildBot.registerCommand(["cata", "catacombs"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
   if (isErr(mc)) return mc;
 
@@ -62,7 +62,7 @@ guildBot.onCommand(["cata", "catacombs"], async (username, args) => {
   return `Catacombs Level for ${mc.name}: ${cata!.toFixed(2)}`;
 });
 
-guildBot.onCommand(["lvl", "level"], async (username, args) => {
+guildBot.registerCommand(["lvl", "level"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
   if (isErr(mc)) return mc;
 
@@ -72,7 +72,7 @@ guildBot.onCommand(["lvl", "level"], async (username, args) => {
   return `Skyblock Level for ${mc.name}: ${level}`;
 });
 
-guildBot.onCommand(["check", "checkplayer"], async (username, args) => {
+guildBot.registerCommand(["check", "checkplayer"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
   if (isErr(mc)) return mc;
 

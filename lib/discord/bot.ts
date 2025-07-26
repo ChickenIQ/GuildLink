@@ -15,18 +15,18 @@ const intents = [
   GatewayIntentBits.Guilds,
 ];
 
-export interface DiscordBotConfig {
+export type DiscordBotConfig = {
   webhookURL: string;
   channelID: string;
   guildID: string;
   token: string;
-}
+};
 
-export interface DiscordMessage {
+export type DiscordMessage = {
   author: string;
   content: string;
   message: Message;
-}
+};
 
 export class DiscordBot {
   private webhookClient: WebhookClient;
@@ -52,11 +52,13 @@ export class DiscordBot {
       if (message.channel.id !== this.channelID) return;
       if (message.author.bot) return;
 
-      return callback({
+      const messageData: DiscordMessage = {
         author: getMessageUsername(message),
         content: parseMessageContent(message),
         message: message,
-      });
+      };
+
+      return callback(messageData);
     });
   };
 

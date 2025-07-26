@@ -1,9 +1,9 @@
 import cache from "memory-cache";
 
-export interface MinecraftProfile {
+export type MinecraftProfile = {
   name: string;
   uuid: string;
-}
+};
 
 export const getMinecraft = async (
   username: string
@@ -22,13 +22,15 @@ export const getMinecraft = async (
   }
 
   data = await res.json();
-  if (!data) return new Error(`UUID not found for username: ${username}`);
+  if (!data || !data.id || !data.name) {
+    return new Error(`Invalid UUID response for username: ${username}`);
+  }
 
-  const playerData = {
+  const profile: MinecraftProfile = {
     name: data.name,
     uuid: data.id,
   };
 
-  cache.put(`mc:${username}`, playerData, 30 * 60 * 1000);
-  return playerData;
+  cache.put(`mc:${username}`, profile, 30 * 60 * 1000);
+  return profile;
 };

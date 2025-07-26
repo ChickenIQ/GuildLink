@@ -1,11 +1,11 @@
 import { ChatMessage } from "prismarine-chat";
 import mineflayer from "mineflayer";
 
-export interface GuildMessage {
+export type GuildMessage = {
   author: string;
   content: string;
   message: ChatMessage;
-}
+};
 
 const guildExpr = /^Guild > (?:\[[^\]]+\] )?(\S+)(?: \[[^\]]+\])?: (.+)$/;
 
@@ -50,7 +50,7 @@ export class GuildBot {
     });
   }
 
-  onCommand(
+  registerCommand(
     aliases: string[],
     // void or error
     callback: (
@@ -66,23 +66,29 @@ export class GuildBot {
       const command = parts[0].substring(1).toLowerCase();
       if (!aliases.includes(command)) return;
 
-      const data = await callback(message.author, parts.slice(1));
-      if (data instanceof Error) {
-        return console.error(data.message);
+      const result = await callback(message.author, parts.slice(1));
+      if (result instanceof Error) {
+        return console.error(result.message);
       }
 
-      return this.sendCommand(`/gc ${data}`);
+      return this.sendCommand(`/gc ${result}`);
     });
   }
 
-  onMessage(callback: (message: GuildMessage) => void) {
-    this.onGuildMessage((message) => {
+  onMessage(callback: (message: GuildMessage) => any) {
+    this.onGuildMessage(async (message) => {
       if (message.content.startsWith("!")) return;
-      return callback({
+
+      const messageData: GuildMessage = {
         author: message.author,
         content: message.content,
         message: message.message,
-      });
+      };
+
+      const result = await callback(messageData);
+      if (result instanceof Error) {
+        return console.error(result.message);
+      }
     });
   }
 
