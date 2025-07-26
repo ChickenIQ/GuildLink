@@ -1,27 +1,31 @@
-function safe<T>(promise: Promise<T>): Promise<[undefined, T] | [Error]>;
-function safe<T>(fn: () => T): [undefined, T] | [Error];
+function safe<T>(promise: Promise<T>): Promise<[T, null] | [null, Error]>;
+function safe<T>(fn: () => T): [T, null] | [null, Error];
 function safe<T>(
   input: Promise<T> | (() => T)
-): Promise<[undefined, T] | [Error]> | [undefined, T] | [Error] {
+): Promise<[T, null] | [null, Error]> | [T, null] | [null, Error] {
   if (input instanceof Promise) return safeAsync(input);
   return safeSync(input);
 }
 
 async function safeAsync<T>(
   promise: Promise<T>
-): Promise<[undefined, T] | [Error]> {
+): Promise<[T, null] | [null, Error]> {
   return promise
-    .then((data) => [undefined, data] as [undefined, T])
-    .catch((error) => [error as Error]);
+    .then((data) => [data, null] as [T, null])
+    .catch((error) => [null, error as Error]);
 }
 
-function safeSync<T>(fn: () => T): [undefined, T] | [Error] {
+function safeSync<T>(fn: () => T): [T, null] | [null, Error] {
   try {
     const data = fn();
-    return [undefined, data] as [undefined, T];
+    return [data, null] as [T, null];
   } catch (error) {
-    return [error as Error];
+    return [null, error as Error];
   }
 }
 
-export default safe;
+function isErr(value: any): value is Error {
+  return value instanceof Error;
+}
+
+export { safe, isErr };

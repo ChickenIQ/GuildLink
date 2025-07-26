@@ -52,9 +52,13 @@ export class GuildBot {
 
   onCommand(
     aliases: string[],
-    callback: (username: string, args: string[]) => void
+    // void or error
+    callback: (
+      username: string,
+      args: string[]
+    ) => string | Error | Promise<string | Error>
   ) {
-    this.onGuildMessage((message) => {
+    this.onGuildMessage(async (message) => {
       if (!message.content.startsWith("!")) return;
       const parts = message.content.split(" ");
       if (!parts[0]) return;
@@ -62,7 +66,12 @@ export class GuildBot {
       const command = parts[0].substring(1).toLowerCase();
       if (!aliases.includes(command)) return;
 
-      return callback(message.author, parts.slice(1));
+      const data = await callback(message.author, parts.slice(1));
+      if (data instanceof Error) {
+        return console.error("Error in command handler:", data);
+      }
+
+      return this.sendCommand(`/gc ${data}`);
     });
   }
 

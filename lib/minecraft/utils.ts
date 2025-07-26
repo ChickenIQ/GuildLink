@@ -5,9 +5,9 @@ export interface MinecraftProfile {
   uuid: string;
 }
 
-export const getMinecraftProfile = async (
+export const getMinecraft = async (
   username: string
-): Promise<MinecraftProfile> => {
+): Promise<MinecraftProfile | Error> => {
   let data = cache.get(`mc:${username}`);
   if (data) return data;
 
@@ -16,11 +16,11 @@ export const getMinecraftProfile = async (
   );
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch UUID (${res.status}): ${res.statusText}`);
+    return new Error(`Failed to fetch UUID (${res.status}): ${res.statusText}`);
   }
 
   data = await res.json();
-  if (!data) throw new Error(`UUID not found for username: ${username}`);
+  if (!data) return new Error(`UUID not found for username: ${username}`);
 
   const playerData = {
     name: data.name,

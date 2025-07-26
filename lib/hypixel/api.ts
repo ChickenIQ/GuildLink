@@ -1,12 +1,12 @@
 import { ProfileNetworthCalculator } from "skyhelper-networth";
-import { numberToHuman } from "../generic/math";
 import { calcXpCatacombs } from "./utils";
 import cache from "memory-cache";
+import { isErr, safe } from "../generic/safe";
 
 export class HypixelAPIHandler {
   private apiKey: string;
 
-  private async fetchAPI(url: string): Promise<any> {
+  private async fetchAPI(url: string): Promise<any | Error> {
     url = "https://api.hypixel.net/v2" + url;
     let data = cache.get(url);
     if (data) return data;
@@ -16,13 +16,13 @@ export class HypixelAPIHandler {
     });
 
     if (!res.ok) {
-      throw new Error(
+      return new Error(
         `Failed to fetch data from ${url} (${res.status}): ${res.statusText}`
       );
     }
 
     data = await res.json();
-    if (!data) throw new Error(`No data found for URL: ${url}`);
+    if (!data) return new Error(`No data found for URL: ${url}`);
 
     cache.put(url, data, 30 * 60 * 1000);
     return data;
@@ -32,8 +32,11 @@ export class HypixelAPIHandler {
     this.apiKey = apiKey;
   }
 
-  async getDiscordUsername(uuid: string) {
+  async getDiscordUsername(uuid: string): Promise<string | Error> {
     const data = await this.fetchAPI(`/player?uuid=${uuid}`);
+    if (isErr(data)) {
+      return new Error(`Failed to fetch player data for UUID: ${uuid}`);
+    }
 
     const discord = data.player?.socialMedia?.links?.DISCORD;
     if (!discord) throw new Error(`No Discord username found for ${uuid}`);
@@ -41,30 +44,31 @@ export class HypixelAPIHandler {
     return discord;
   }
 
-  async getSkyblockProfile(uuid: string) {
+  async getSkyblockProfile(uuid: string): Promise<any | Error> {
     const data = await this.fetchAPI(`/skyblock/profiles?uuid=${uuid}`);
+    if (isErr(data)) {
+      return new Error(`Failed to fetch Skyblock profile for UUID: ${uuid}`);
+    }
 
     const profile = data.profiles.find(
       (profile: { selected: boolean }) => profile.selected
     );
 
-    if (!profile) throw new Error(`No active profile found for ${uuid}`);
+    if (!profile) return new Error(`No active profile found for ${uuid}`);
 
     return profile;
   }
 
-  async getMuseum(profileID: string) {
+  async getMuseum(profileID: string): Promise<any | Error> {
     return this.fetchAPI(`/skyblock/museum?profile=${profileID}`);
   }
 
-  async getNetworth(uuid: string) {
+  async getNetworth(uuid: string): Promise<number | Error> {
     const profile = await this.getSkyblockProfile(uuid);
-    if (!profile) throw new Error(`Profile not found for UUID: ${uuid}`);
+    if (isErr(profile)) return profile;
 
     const museum = await this.getMuseum(profile.profile_id);
-    if (!museum) {
-      throw new Error(`Museum not found for profile: ${profile.profile_id}`);
-    }
+    if (isErr(museum)) return museum;
 
     const networthManager = new ProfileNetworthCalculator(
       profile.members[uuid],
@@ -72,26 +76,33 @@ export class HypixelAPIHandler {
       profile.banking?.balance
     );
 
-    return (await networthManager.getNetworth()).networth;
+    const [nw, nwErr] = await safe(networthManager.getNetworth());
+    if (nwErr) return nwErr;
+
+    return nw.networth;
   }
 
-  async getSkyblockLevel(uuid: string) {
+  async getSkyblockLevel(uuid: string): Promise<number | Error> {
     const profile = await this.getSkyblockProfile(uuid);
-    if (!profile) return;
+    if (isErr(profile)) return profile;
 
     const data = profile.members[uuid];
-    if (!data || !data.leveling) return;
+    if (!data || !data.leveling) {
+      return new Error(`No leveling data found for ${uuid}`);
+    }
 
     return data.leveling.experience / 100;
   }
 
-  async getCatacombsLevel(uuid: string) {
+  async getCatacombsLevel(uuid: string): Promise<number | Error> {
     const profile = await this.getSkyblockProfile(uuid);
-    if (!profile) return;
+    if (isErr(profile)) return profile;
 
     const dungeons = profile?.members[uuid]?.dungeons?.dungeon_types?.catacombs;
     const xp = dungeons?.experience;
-    if (!dungeons || !xp) return;
+    if (!dungeons || !xp) {
+      return new Error(`No Catacombs data found for ${uuid}`);
+    }
 
     return calcXpCatacombs(xp);
   }

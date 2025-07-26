@@ -1,10 +1,10 @@
 import { getReferencedUsername } from "./lib/discord/utils";
-import { getMinecraftProfile } from "./lib/minecraft/utils";
+import { getMinecraft } from "./lib/minecraft/utils";
 import { HypixelAPIHandler } from "./lib/hypixel/api";
+import { numberToHuman } from "./lib/generic/math";
 import { DiscordBot } from "./lib/discord/bot";
 import { GuildBot } from "./lib/minecraft/bot";
-import safe from "./lib/generic/safe";
-import { numberToHuman } from "./lib/generic/math";
+import { isErr } from "./lib/generic/safe";
 
 // Fix this later...
 if (!process.env.WEBHOOK_URL) throw new Error("$WEBHOOK_URL is not set!");
@@ -33,69 +33,65 @@ discordBot.onMessage(async (message) => {
 });
 
 guildBot.onMessage(async (message) => {
-  const { uuid } = await getMinecraftProfile(message.author);
-  if (!uuid) return;
+  const mc = await getMinecraft(message.author);
+  if (isErr(mc)) return mc;
 
-  const [err, user] = await safe(hypixelAPI.getDiscordUsername(uuid));
-  if (err) return console.error(`Error fetching linked username:`, err);
+  const user = await hypixelAPI.getDiscordUsername(mc.uuid);
+  if (isErr(user)) return user;
 
-  return discordBot.sendMessageAsUser(user!, message.content);
+  return discordBot.sendMessageAsUser(user, message.content);
 });
 
 guildBot.onCommand(["nw", "networth"], async (username, args) => {
-  const mc = await getMinecraftProfile(args[0] || username);
-  if (!mc) return;
+  const mc = await getMinecraft(args[0] || username);
+  if (isErr(mc)) return mc;
 
-  const [err, nw] = await safe(hypixelAPI.getNetworth(mc.uuid));
-  if (err) return console.error("Error fetching networth:", err);
+  const nw = await hypixelAPI.getNetworth(mc.uuid);
+  if (isErr(nw)) return nw;
 
-  return guildBot.sendCommand(
-    `/gc Networth for ${mc.name}: ${numberToHuman(nw)}`
-  );
+  return `Networth for ${mc.name}: ${numberToHuman(nw)}`;
 });
 
 guildBot.onCommand(["cata", "catacombs"], async (username, args) => {
-  const mc = await getMinecraftProfile(args[0] || username);
-  if (!mc) return;
+  const mc = await getMinecraft(args[0] || username);
+  if (isErr(mc)) return mc;
 
-  const [err, cata] = await safe(hypixelAPI.getCatacombsLevel(mc.uuid));
-  if (err) return console.error("Error fetching catacombs data:", err);
+  const cata = await hypixelAPI.getCatacombsLevel(mc.uuid);
+  if (isErr(cata)) return cata;
 
-  return guildBot.sendCommand(
-    `/gc Catacombs Level for ${mc.name}: ${cata!.toFixed(2)}`
-  );
+  return `Catacombs Level for ${mc.name}: ${cata!.toFixed(2)}`;
 });
 
 guildBot.onCommand(["lvl", "level"], async (username, args) => {
-  const mc = await getMinecraftProfile(args[0] || username);
-  if (!mc) return;
+  const mc = await getMinecraft(args[0] || username);
+  if (isErr(mc)) return mc;
 
-  const [err, level] = await safe(hypixelAPI.getSkyblockLevel(mc.uuid));
-  if (err) return console.error("Error fetching Skyblock level:", err);
+  const level = await hypixelAPI.getSkyblockLevel(mc.uuid);
+  if (isErr(level)) return level;
 
-  return guildBot.sendCommand(`/gc Skyblock Level for ${mc.name}: ${level}`);
+  return `Skyblock Level for ${mc.name}: ${level}`;
 });
 
 guildBot.onCommand(["check", "checkplayer"], async (username, args) => {
-  const mc = await getMinecraftProfile(args[0] || username);
-  if (!mc) return;
+  const mc = await getMinecraft(args[0] || username);
+  if (isErr(mc)) return mc;
 
   const cata = await hypixelAPI.getCatacombsLevel(mc.uuid);
-  const sb = await hypixelAPI.getSkyblockLevel(mc.uuid);
-  const nw = await hypixelAPI.getNetworth(mc.uuid);
+  if (isErr(cata)) return cata;
 
-  if (!cata || !sb || !nw) return;
+  const sb = await hypixelAPI.getSkyblockLevel(mc.uuid);
+  if (isErr(sb)) return sb;
+
+  const nw = await hypixelAPI.getNetworth(mc.uuid);
+  if (isErr(nw)) return nw;
+
   const nwText = numberToHuman(nw);
   const cataText = cata.toFixed(2);
   const stats = `Skyblock Level: ${sb}, Catacombs Level: ${cataText}, Networth: ${nwText}`;
 
   if (sb < 250 && nw < 9_000_000_000 && cata < 44) {
-    return guildBot.sendCommand(
-      `/gc ${mc.name} does not meet the requirements: ${stats}`
-    );
+    return `${mc.name} does not meet the requirements: ${stats}`;
   }
 
-  return guildBot.sendCommand(
-    `/gc ${mc.name} meets the requirements: ${stats}`
-  );
+  return `/gc ${mc.name} meets the requirements: ${stats}`;
 });
