@@ -1,5 +1,6 @@
 import { ChatMessage } from "prismarine-chat";
 import mineflayer from "mineflayer";
+import { safe } from "../generic/safe";
 
 export type GuildMessage = {
   author: string;
@@ -53,23 +54,18 @@ export class GuildBot {
   registerCommand(
     aliases: string[],
     // void or error
-    callback: (
-      username: string,
-      args: string[]
-    ) => string | Error | Promise<string | Error>
+    callback: (username: string, args: string[]) => Promise<string>
   ) {
     this.onGuildMessage(async (message) => {
       if (!message.content.startsWith("!")) return;
-      const parts = message.content.split(" ");
-      if (!parts[0]) return;
+      const args = message.content.split(" ");
+      if (!args[0]) return;
 
-      const command = parts[0].substring(1).toLowerCase();
+      const command = args[0].substring(1).toLowerCase();
       if (!aliases.includes(command)) return;
 
-      const result = await callback(message.author, parts.slice(1));
-      if (result instanceof Error) {
-        return console.error(result.message);
-      }
+      const [result, err] = await safe(callback(message.author, args.slice(1)));
+      if (err) return console.error("Error in command callback:", err);
 
       return this.sendCommand(`/gc ${result}`);
     });
@@ -85,10 +81,8 @@ export class GuildBot {
         message: message.message,
       };
 
-      const result = await callback(messageData);
-      if (result instanceof Error) {
-        return console.error(result.message);
-      }
+      const [_, err] = await safe(callback(messageData));
+      if (err) return console.error("Error in command callback:", err);
     });
   }
 

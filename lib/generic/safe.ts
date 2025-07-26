@@ -24,8 +24,4 @@ function safeSync<T>(fn: () => T): [T, null] | [null, Error] {
   }
 }
 
-function isErr(value: any): value is Error {
-  return value instanceof Error;
-}
-
-export { safe, isErr };
+export { safe };

@@ -7,7 +7,7 @@ export type MinecraftProfile = {
 
 export const getMinecraft = async (
   username: string
-): Promise<MinecraftProfile | Error> => {
+): Promise<MinecraftProfile> => {
   let data = cache.get(`mc:${username}`);
   if (data) return data;
 
@@ -16,14 +16,14 @@ export const getMinecraft = async (
   );
 
   if (!res.ok) {
-    return new Error(
+    throw new Error(
       `Failed to fetch UUID for ${username} (${res.status}): ${res.statusText}`
     );
   }
 
   data = await res.json();
   if (!data || !data.id || !data.name) {
-    return new Error(`Invalid UUID response for username: ${username}`);
+    throw new Error(`Invalid UUID response for username: ${username}`);
   }
 
   const profile: MinecraftProfile = {

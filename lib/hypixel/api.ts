@@ -1,6 +1,6 @@
 import { ProfileNetworthCalculator } from "skyhelper-networth";
-import { isErr, safe } from "../generic/safe";
 import { calcXpCatacombs } from "./utils";
+import { safe } from "../generic/safe";
 import cache from "memory-cache";
 
 export class HypixelAPIHandler {
@@ -16,13 +16,13 @@ export class HypixelAPIHandler {
     });
 
     if (!res.ok) {
-      return new Error(
+      throw new Error(
         `Failed to fetch data from ${url} (${res.status}): ${res.statusText}`
       );
     }
 
     data = await res.json();
-    if (!data) return new Error(`No data found for URL: ${url}`);
+    if (!data) throw new Error(`No data found for URL: ${url}`);
 
     cache.put(url, data, 30 * 60 * 1000);
     return data;
@@ -32,10 +32,12 @@ export class HypixelAPIHandler {
     this.apiKey = apiKey;
   }
 
-  async getDiscordUsername(uuid: string): Promise<string | Error> {
-    const data = await this.fetchAPI(`/player?uuid=${uuid}`);
-    if (isErr(data)) {
-      return new Error(`Failed to fetch player data for UUID: ${uuid}`);
+  async getDiscordUsername(uuid: string): Promise<string> {
+    const [data, apiErr] = await safe(this.fetchAPI(`/player?uuid=${uuid}`));
+    if (apiErr) {
+      throw new Error(
+        `Failed to Discord Username for UUID: ${uuid} - ${apiErr.message}`
+      );
     }
 
     const discord = data.player?.socialMedia?.links?.DISCORD;
@@ -44,31 +46,41 @@ export class HypixelAPIHandler {
     return discord;
   }
 
-  async getSkyblockProfile(uuid: string): Promise<any | Error> {
-    const data = await this.fetchAPI(`/skyblock/profiles?uuid=${uuid}`);
-    if (isErr(data)) {
-      return new Error(`Failed to fetch Skyblock profile for UUID: ${uuid}`);
+  async getSkyblockProfile(uuid: string): Promise<any> {
+    const [data, apiErr] = await safe(
+      this.fetchAPI(`/skyblock/profiles?uuid=${uuid}`)
+    );
+    if (apiErr) {
+      throw new Error(
+        `Failed to fetch SkyBlock Profile for UUID: ${uuid} - ${apiErr.message}`
+      );
     }
 
     const profile = data.profiles.find(
       (profile: { selected: boolean }) => profile.selected
     );
 
-    if (!profile) return new Error(`No active profile found for ${uuid}`);
+    if (!profile) throw new Error(`No active profile found for ${uuid}`);
 
     return profile;
   }
 
-  async getMuseum(profileID: string): Promise<any | Error> {
-    return this.fetchAPI(`/skyblock/museum?profile=${profileID}`);
+  async getMuseum(profileID: string): Promise<any> {
+    const [data, apiErr] = await safe(
+      this.fetchAPI(`/skyblock/museum?profile=${profileID}`)
+    );
+    if (apiErr) {
+      throw new Error(
+        `Failed to fetch Museum data for profile ID: ${profileID} - ${apiErr.message}`
+      );
+    }
+
+    return data.museum;
   }
 
-  async getNetworth(uuid: string): Promise<number | Error> {
+  async getNetworth(uuid: string): Promise<number> {
     const profile = await this.getSkyblockProfile(uuid);
-    if (isErr(profile)) return profile;
-
     const museum = await this.getMuseum(profile.profile_id);
-    if (isErr(museum)) return museum;
 
     const networthManager = new ProfileNetworthCalculator(
       profile.members[uuid],
@@ -76,32 +88,34 @@ export class HypixelAPIHandler {
       profile.banking?.balance
     );
 
-    const [nw, nwErr] = await safe(networthManager.getNetworth());
-    if (nwErr) return nwErr;
+    const [nw, err] = await safe(networthManager.getNetworth());
+    if (err) {
+      throw new Error(
+        `Failed to calculate networth for UUID: ${uuid} - ${err.message}`
+      );
+    }
 
     return nw.networth;
   }
 
-  async getSkyblockLevel(uuid: string): Promise<number | Error> {
+  async getSkyblockLevel(uuid: string): Promise<number> {
     const profile = await this.getSkyblockProfile(uuid);
-    if (isErr(profile)) return profile;
-
     const data = profile.members[uuid];
     if (!data || !data.leveling) {
-      return new Error(`No leveling data found for ${uuid}`);
+      throw new Error(`No leveling data found for UUID: ${uuid}`);
     }
 
     return data.leveling.experience / 100;
   }
 
-  async getCatacombsLevel(uuid: string): Promise<number | Error> {
+  async getCatacombsLevel(uuid: string): Promise<number> {
     const profile = await this.getSkyblockProfile(uuid);
-    if (isErr(profile)) return profile;
 
     const dungeons = profile?.members[uuid]?.dungeons?.dungeon_types?.catacombs;
     const xp = dungeons?.experience;
+
     if (!dungeons || !xp) {
-      return new Error(`No Catacombs data found for ${uuid}`);
+      throw new Error(`No Catacombs data found for UUID: ${uuid}`);
     }
 
     return calcXpCatacombs(xp);

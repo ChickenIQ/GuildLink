@@ -4,7 +4,6 @@ import { HypixelAPIHandler } from "./lib/hypixel/api";
 import { numberToHuman } from "./lib/generic/math";
 import { DiscordBot } from "./lib/discord/bot";
 import { GuildBot } from "./lib/minecraft/bot";
-import { isErr } from "./lib/generic/safe";
 
 // Fix this later...
 if (!process.env.WEBHOOK_URL) throw new Error("$WEBHOOK_URL is not set!");
@@ -34,56 +33,38 @@ discordBot.onMessage(async (message) => {
 
 guildBot.onMessage(async (message) => {
   const mc = await getMinecraft(message.author);
-  if (isErr(mc)) return mc;
-
   const user = await hypixelAPI.getDiscordUsername(mc.uuid);
-  if (isErr(user)) return user;
 
   return discordBot.sendMessageAsUser(user, message.content);
 });
 
 guildBot.registerCommand(["nw", "networth"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
-  if (isErr(mc)) return mc;
-
   const nw = await hypixelAPI.getNetworth(mc.uuid);
-  if (isErr(nw)) return nw;
 
   return `Networth for ${mc.name}: ${numberToHuman(nw)}`;
 });
 
 guildBot.registerCommand(["cata", "catacombs"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
-  if (isErr(mc)) return mc;
-
   const cata = await hypixelAPI.getCatacombsLevel(mc.uuid);
-  if (isErr(cata)) return cata;
 
   return `Catacombs Level for ${mc.name}: ${cata!.toFixed(2)}`;
 });
 
 guildBot.registerCommand(["lvl", "level"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
-  if (isErr(mc)) return mc;
-
   const level = await hypixelAPI.getSkyblockLevel(mc.uuid);
-  if (isErr(level)) return level;
 
   return `Skyblock Level for ${mc.name}: ${level}`;
 });
 
 guildBot.registerCommand(["check", "checkplayer"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
-  if (isErr(mc)) return mc;
 
   const cata = await hypixelAPI.getCatacombsLevel(mc.uuid);
-  if (isErr(cata)) return cata;
-
   const sb = await hypixelAPI.getSkyblockLevel(mc.uuid);
-  if (isErr(sb)) return sb;
-
   const nw = await hypixelAPI.getNetworth(mc.uuid);
-  if (isErr(nw)) return nw;
 
   const nwText = numberToHuman(nw);
   const cataText = cata.toFixed(2);
