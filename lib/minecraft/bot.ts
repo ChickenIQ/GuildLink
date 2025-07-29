@@ -17,7 +17,6 @@ export class GuildBot {
     this.client.on("message", (message: ChatMessage) => {
       const match = message.toString().match(guildExpr);
       if (!match || !match[1] || !match[2]) return;
-      if (match[1] === this.client.username) return;
 
       return callback({
         author: match[1],
@@ -53,7 +52,6 @@ export class GuildBot {
 
   registerCommand(
     aliases: string[],
-    // void or error
     callback: (username: string, args: string[]) => Promise<string>
   ) {
     this.onGuildMessage(async (message) => {
@@ -73,8 +71,6 @@ export class GuildBot {
 
   onMessage(callback: (message: GuildMessage) => any) {
     this.onGuildMessage(async (message) => {
-      if (message.content.startsWith("!")) return;
-
       const messageData: GuildMessage = {
         author: message.author,
         content: message.content,
