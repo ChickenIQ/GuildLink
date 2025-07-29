@@ -40,7 +40,10 @@ export const getMinecraftAvatar = async (
   username: string
 ): Promise<string | null> => {
   const [data, err] = await safe(getMinecraft(username));
-  if (err) return null;
+  if (err) {
+    console.error(`Error fetching Minecraft avatar for ${username}:`, err);
+    return null;
+  }
 
   return `https://crafatar.com/avatars/${data.uuid}`;
 };
