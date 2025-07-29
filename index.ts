@@ -35,9 +35,12 @@ guildBot.onMessage(async (message) => {
   const content = message.content.replace(/@everyone|@here|<@!?[0-9]+>/g, "");
   if (!content) return;
 
-  const avatarURL =
-    (await discordBot.getMember(message.author))?.user.displayAvatarURL() ||
-    `https://mc-heads.net/avatar/${(await getMinecraft(message.author)).uuid}`;
+  const member = await discordBot.getMember(message.author);
+  let avatarURL = member?.user.displayAvatarURL();
+  if (!avatarURL) {
+    const mc = await getMinecraft(message.author);
+    avatarURL = `https://mc-heads.net/avatar/${mc.uuid}/128`;
+  }
 
   return discordBot.sendMessageAsUser({
     author: message.author,
