@@ -32,10 +32,18 @@ discordBot.onMessage(async (message) => {
 });
 
 guildBot.onMessage(async (message) => {
-  const mc = await getMinecraft(message.author);
-  const user = await hypixelAPI.getDiscordUsername(mc.uuid);
+  const content = message.content.replace(/@everyone|@here|<@!?[0-9]+>/g, "");
+  if (!content) return;
 
-  return discordBot.sendMessageAsUser(user, message.content);
+  const avatarURL =
+    (await discordBot.getMember(message.author))?.user.displayAvatarURL() ||
+    `https://crafatar.com/avatars/${(await getMinecraft(message.author)).uuid}`;
+
+  return discordBot.sendMessageAsUser({
+    author: message.author,
+    avatarURL: avatarURL,
+    content: content,
+  });
 });
 
 guildBot.registerCommand(["nw", "networth"], async (username, args) => {

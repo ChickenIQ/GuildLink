@@ -28,6 +28,12 @@ export type DiscordMessage = {
   message: Message;
 };
 
+export type UserMessage = {
+  author: string;
+  content: string;
+  avatarURL: string;
+};
+
 export class DiscordBot {
   private webhookClient: WebhookClient;
   private client: Client;
@@ -62,17 +68,11 @@ export class DiscordBot {
     });
   };
 
-  sendMessageAsUser = async (username: string, message: string) => {
-    const member = await this.getMember(username);
-    if (!member) return;
-
-    const content = message.replace(/@everyone|@here|<@!?[0-9]+>/g, "");
-    if (!content) return;
-
+  sendMessageAsUser = async (message: UserMessage) => {
     return await this.webhookClient.send({
-      username: member.nickname || member.user.displayName,
-      avatarURL: member.user.displayAvatarURL(),
-      content: content,
+      avatarURL: message.avatarURL,
+      username: message.author,
+      content: message.content,
     });
   };
 
@@ -81,7 +81,7 @@ export class DiscordBot {
     if (!guild) return;
 
     return (await guild.members.fetch()).find(
-      (member) => member.user.username === username
+      (member) => member.nickname === username
     );
   };
 
