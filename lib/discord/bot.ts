@@ -69,6 +69,8 @@ export class DiscordBot {
   };
 
   sendMessageAsUser = async (message: UserMessage) => {
+    if (!message.content || !message.author) return;
+
     return await this.webhookClient.send({
       avatarURL: message.avatarURL,
       username: message.author,
@@ -81,7 +83,7 @@ export class DiscordBot {
     if (!guild) return;
 
     return (await guild.members.fetch()).find(
-      (member) => member.nickname === username
+      (member) => member.user.username === username
     );
   };
 

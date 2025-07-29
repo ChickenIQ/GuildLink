@@ -4,7 +4,6 @@ import { getMinecraft } from "./lib/minecraft/utils";
 import { numberToHuman } from "./lib/generic/math";
 import { DiscordBot } from "./lib/discord/bot";
 import { GuildBot } from "./lib/minecraft/bot";
-import { safe } from "./lib/generic/safe";
 
 // Fix this later...
 if (!process.env.WEBHOOK_URL) throw new Error("$WEBHOOK_URL is not set!");
@@ -33,17 +32,10 @@ discordBot.onMessage(async (message) => {
 });
 
 guildBot.onMessage(async (message) => {
-  let avatarURL = "https://mc-heads.net/avatar/"; // Defaults to Steve
-  const [mc, err] = await safe(getMinecraft(message.author));
-  if (!err) avatarURL += mc.uuid + "/128";
-
-  const content = message.content.replace(/@everyone|@here|<@!?[0-9]+>/g, "");
-  if (!content) return;
-
   return discordBot.sendMessageAsUser({
+    content: message.content.replace(/@everyone|@here|<@!?[0-9]+>/g, ""),
+    avatarURL: `https://mc-heads.net/avatar/${message.author}/128`,
     author: message.author,
-    avatarURL: avatarURL,
-    content: content,
   });
 });
 
