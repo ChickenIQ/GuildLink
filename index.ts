@@ -37,7 +37,7 @@ guildBot.onMessage(async (message) => {
 
   const avatarURL =
     (await discordBot.getMember(message.author))?.user.displayAvatarURL() ||
-    `https://crafatar.com/avatars/${(await getMinecraft(message.author)).uuid}`;
+    `https://mc-heads.net/avatar/${(await getMinecraft(message.author)).uuid}`;
 
   return discordBot.sendMessageAsUser({
     author: message.author,
