@@ -1,6 +1,6 @@
-import { getMinecraft, getMinecraftAvatar } from "./lib/minecraft/utils";
 import { getReferencedUsername } from "./lib/discord/utils";
 import { HypixelAPIHandler } from "./lib/hypixel/api";
+import { getMinecraft } from "./lib/minecraft/utils";
 import { numberToHuman } from "./lib/generic/math";
 import { DiscordBot } from "./lib/discord/bot";
 import { GuildBot } from "./lib/minecraft/bot";
@@ -35,14 +35,13 @@ guildBot.onMessage(async (message) => {
   const content = message.content.replace(/@everyone|@here|<@!?[0-9]+>/g, "");
   if (!content) return;
 
-  const member = await discordBot.getMember(message.author);
   const avatarURL =
-    member?.user.displayAvatarURL() ||
-    (await getMinecraftAvatar(message.author));
+    (await discordBot.getMember(message.author))?.user.displayAvatarURL() ||
+    `https://crafatar.com/avatars/${(await getMinecraft(message.author)).uuid}`;
 
   return discordBot.sendMessageAsUser({
-    avatarURL: avatarURL || "https://cdn.discordapp.com/embed/avatars/0.png",
     author: message.author,
+    avatarURL: avatarURL,
     content: content,
   });
 });

@@ -35,15 +35,3 @@ export const getMinecraft = async (
   cache.put(`mc:${username}`, profile, 30 * 60 * 1000);
   return profile;
 };
-
-export const getMinecraftAvatar = async (
-  username: string
-): Promise<string | null> => {
-  const [data, err] = await safe(getMinecraft(username));
-  if (err) {
-    console.error(`Error fetching Minecraft avatar for ${username}:`, err);
-    return null;
-  }
-
-  return `https://crafatar.com/avatars/${data.uuid}`;
-};
