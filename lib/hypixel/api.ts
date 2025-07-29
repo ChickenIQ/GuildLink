@@ -75,7 +75,7 @@ export class HypixelAPIHandler {
       );
     }
 
-    return data.museum;
+    return data;
   }
 
   async getNetworth(uuid: string): Promise<number> {
