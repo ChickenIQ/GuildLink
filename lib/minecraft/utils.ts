@@ -1,3 +1,4 @@
+import { safe } from "../generic/safe";
 import cache from "memory-cache";
 
 export type MinecraftProfile = {
@@ -33,4 +34,13 @@ export const getMinecraft = async (
 
   cache.put(`mc:${username}`, profile, 30 * 60 * 1000);
   return profile;
+};
+
+export const getMinecraftAvatar = async (
+  username: string
+): Promise<string | null> => {
+  const [data, err] = await safe(getMinecraft(username));
+  if (err) return null;
+
+  return `https://crafatar.com/avatars/${data.uuid}`;
 };
