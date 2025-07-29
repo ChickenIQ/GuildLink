@@ -22,6 +22,7 @@ const discordBot = new DiscordBot({
   token: process.env.TOKEN,
 });
 
+// Discord Message Handler
 discordBot.onMessage(async (message) => {
   if (message.message.reference) {
     const referencedName = await getReferencedUsername(message.message);
@@ -31,6 +32,7 @@ discordBot.onMessage(async (message) => {
   return guildBot.sendMessageAsUser(message.author, message.content);
 });
 
+// Guild Message Handler
 guildBot.onMessage(async (message) => {
   return discordBot.sendMessageAsUser({
     content: message.content.replace(/@everyone|@here|<@!?[0-9]+>/g, ""),
@@ -39,6 +41,7 @@ guildBot.onMessage(async (message) => {
   });
 });
 
+// Command Handlers
 guildBot.registerCommand(["nw", "networth"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
   const nw = await hypixelAPI.getNetworth(mc.uuid);
@@ -76,4 +79,8 @@ guildBot.registerCommand(["check", "checkplayer"], async (username, args) => {
   }
 
   return `${mc.name} meets the requirements: ${stats}`;
+});
+
+guildBot.registerCommand(["help", "commands"], async () => {
+  return `Available commands: \`nw\`, \`cata\`, \`lvl\`, \`check\`, \`help\`. Use \`<command> <username>\` to specify a player.`;
 });
