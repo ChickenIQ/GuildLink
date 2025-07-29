@@ -33,7 +33,7 @@ discordBot.onMessage(async (message) => {
 
 guildBot.onMessage(async (message) => {
   const mc = await getMinecraft(message.author);
-  const avatarURL = `https://mc-heads.net/avatar/${mc.uuid}/128`;
+  const avatarURL = `https://mc-heads.net/avatar/${mc.uuid}`;
 
   const content = message.content.replace(/@everyone|@here|<@!?[0-9]+>/g, "");
   if (!content) return;
