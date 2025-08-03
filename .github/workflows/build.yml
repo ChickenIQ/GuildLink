@@ -51,5 +51,5 @@ jobs:
           file: Containerfile
           tags: ${{ env.IMAGE_FULL }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=registry,ref=${env.IMAGE_FULL}-cache
-          cache-to: type=registry,ref=${env.IMAGE_FULL}-cache,mode=max
+          cache-from: type=registry,ref=${{ env.IMAGE_FULL }}-cache
+          cache-to: type=registry,ref=${{ env.IMAGE_FULL }}-cache,mode=max
