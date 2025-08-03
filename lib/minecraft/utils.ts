@@ -1,4 +1,3 @@
-import { safe } from "../generic/safe";
 import cache from "memory-cache";
 
 export type MinecraftProfile = {
