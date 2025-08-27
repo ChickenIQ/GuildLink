@@ -58,29 +58,40 @@ guildBot.registerCommand(["cata", "catacombs"], async (username, args) => {
 
 guildBot.registerCommand(["lvl", "level"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
-  const level = await hypixelAPI.getSkyblockLevel(mc.uuid);
+  const level = await hypixelAPI.getSkyBlockLevel(mc.uuid);
 
   return `Skyblock Level for ${mc.name}: ${level}`;
 });
 
-guildBot.registerCommand(["check", "checkplayer"], async (username, args) => {
+guildBot.registerCommand(["check", "gcheck"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
 
-  const cata = await hypixelAPI.getCatacombsLevel(mc.uuid);
-  const sb = await hypixelAPI.getSkyblockLevel(mc.uuid);
-  const nw = await hypixelAPI.getNetworth(mc.uuid);
+  const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
+  const nwText = numberToHuman(stats.networth);
+  const cataText = stats.catacombs.toFixed(2);
 
-  const nwText = numberToHuman(nw);
-  const cataText = cata.toFixed(2);
-  const stats = `Skyblock Level: ${sb}, Catacombs Level: ${cataText}, Networth: ${nwText}`;
+  const output = `Skyblock Level: ${stats.level}, Catacombs Level: ${cataText}, Networth: ${nwText}`;
 
-  if (sb < 250 && nw < 9_000_000_000 && cata < 44) {
-    return `${mc.name} does not meet the requirements: ${stats}`;
+  if (
+    stats.level < 250 &&
+    stats.catacombs < 44 &&
+    stats.networth < 9_000_000_000
+  ) {
+    return `${mc.name} does not meet the requirements: ${output}`;
   }
 
-  return `${mc.name} meets the requirements: ${stats}`;
+  return `${mc.name} meets the requirements: ${output}`;
+});
+
+guildBot.registerCommand(["stats", "stat"], async (username, args) => {
+  const mc = await getMinecraft(args[0] || username);
+  const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
+  const nwText = numberToHuman(stats.networth);
+  const cataText = stats.catacombs.toFixed(2);
+
+  return `Stats for ${mc.name} - Skyblock Level: ${stats.level}, Catacombs Level: ${cataText}, Networth: ${nwText}`;
 });
 
 guildBot.registerCommand(["help", "commands"], async () => {
-  return `Available commands: \`nw\`, \`cata\`, \`lvl\`, \`check\`, \`help\`. Use \`<command> <username>\` to specify a player.`;
+  return `Available commands: \`nw\`, \`cata\`, \`lvl\`, \`check\`, \`stats\`, \`help\`. Use \`<command> <username>\` to specify a player.`;
 });

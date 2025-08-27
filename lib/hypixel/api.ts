@@ -3,6 +3,12 @@ import { calcXpCatacombs } from "./utils";
 import { safe } from "../generic/safe";
 import cache from "memory-cache";
 
+export type SkyBlockStats = {
+  catacombs: number;
+  networth: number;
+  level: number;
+};
+
 export class HypixelAPIHandler {
   private apiKey: string;
 
@@ -98,7 +104,7 @@ export class HypixelAPIHandler {
     return nw.networth;
   }
 
-  async getSkyblockLevel(uuid: string): Promise<number> {
+  async getSkyBlockLevel(uuid: string): Promise<number> {
     const profile = await this.getSkyblockProfile(uuid);
     const data = profile.members[uuid];
     if (!data || !data.leveling) {
@@ -114,5 +120,13 @@ export class HypixelAPIHandler {
     return calcXpCatacombs(
       profile?.members[uuid]?.dungeons?.dungeon_types?.catacomb?.experience || 0
     );
+  }
+
+  async getSkyBlockStats(uuid: string): Promise<SkyBlockStats> {
+    return {
+      catacombs: await this.getCatacombsLevel(uuid),
+      networth: await this.getSkyBlockLevel(uuid),
+      level: await this.getNetworth(uuid),
+    };
   }
 }
