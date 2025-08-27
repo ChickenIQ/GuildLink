@@ -116,10 +116,9 @@ export class HypixelAPIHandler {
 
   async getCatacombsLevel(uuid: string): Promise<number> {
     const profile = await this.getSkyblockProfile(uuid);
+    const cata = profile?.members[uuid]?.dungeons?.dungeon_types?.catacombs;
 
-    return calcXpCatacombs(
-      profile?.members[uuid]?.dungeons?.dungeon_types?.catacomb?.experience || 0
-    );
+    return calcXpCatacombs(cata?.experience || 0);
   }
 
   async getSkyBlockStats(uuid: string): Promise<SkyBlockStats> {
