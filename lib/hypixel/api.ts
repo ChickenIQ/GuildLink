@@ -125,8 +125,8 @@ export class HypixelAPIHandler {
   async getSkyBlockStats(uuid: string): Promise<SkyBlockStats> {
     return {
       catacombs: await this.getCatacombsLevel(uuid),
-      networth: await this.getSkyBlockLevel(uuid),
-      level: await this.getNetworth(uuid),
+      level: await this.getSkyBlockLevel(uuid),
+      networth: await this.getNetworth(uuid),
     };
   }
 }

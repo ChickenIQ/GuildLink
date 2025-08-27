@@ -89,7 +89,7 @@ guildBot.registerCommand(["stats", "stat"], async (username, args) => {
   const nwText = numberToHuman(stats.networth);
   const cataText = stats.catacombs.toFixed(2);
 
-  return `Stats for ${mc.name} - Skyblock Level: ${stats.level}, Catacombs Level: ${cataText}, Networth: ${nwText}`;
+  return `Stats for ${mc.name}: Skyblock Level: ${stats.level}, Catacombs Level: ${cataText}, Networth: ${nwText}`;
 });
 
 guildBot.registerCommand(["help", "commands"], async () => {
