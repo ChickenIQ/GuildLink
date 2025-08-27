@@ -112,11 +112,7 @@ export class HypixelAPIHandler {
     const profile = await this.getSkyblockProfile(uuid);
 
     const dungeons = profile?.members[uuid]?.dungeons?.dungeon_types?.catacombs;
-    const xp = dungeons?.experience;
-
-    if (!dungeons || !xp) {
-      throw new Error(`No Catacombs data found for UUID: ${uuid}`);
-    }
+    const xp = dungeons?.experience || 0;
 
     return calcXpCatacombs(xp);
   }
