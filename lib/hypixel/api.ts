@@ -121,6 +121,13 @@ export class HypixelAPIHandler {
     return calcXpCatacombs(cata?.experience || 0);
   }
 
+  async getM7PersonalBest(uuid: string): Promise<number> {
+    const profile = await this.getSkyblockProfile(uuid);
+    const dungeon = profile?.members[uuid]?.dungeons?.dungeon_types;
+
+    return dungeon?.master_catacombs?.fastest_time?.["7"] || 0;
+  }
+
   async getSkyBlockStats(uuid: string): Promise<SkyBlockStats> {
     return {
       catacombs: await this.getCatacombsLevel(uuid),

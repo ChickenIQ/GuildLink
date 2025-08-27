@@ -1,7 +1,7 @@
 import { getReferencedUsername } from "./lib/discord/utils";
 import { HypixelAPIHandler } from "./lib/hypixel/api";
 import { getMinecraft } from "./lib/minecraft/utils";
-import { numberToHuman } from "./lib/generic/math";
+import { formatTime, numberToHuman } from "./lib/generic/math";
 import { DiscordBot } from "./lib/discord/bot";
 import { GuildBot } from "./lib/minecraft/bot";
 
@@ -92,6 +92,14 @@ guildBot.registerCommand(["stats", "stat"], async (username, args) => {
   return `Stats for ${mc.name}: Skyblock Level: ${stats.level}, Catacombs Level: ${cataText}, Networth: ${nwText}`;
 });
 
+guildBot.registerCommand(["pb"], async (username, args) => {
+  const mc = await getMinecraft(args[0] || username);
+  const pb = await hypixelAPI.getM7PersonalBest(mc.uuid);
+  if (pb == 0) return `${mc.name} has no M7 PB.`;
+
+  return `M7 PB for ${mc.name}: ${formatTime(pb)}`;
+});
+
 guildBot.registerCommand(["help", "commands"], async () => {
-  return `Available commands: \`nw\`, \`cata\`, \`lvl\`, \`check\`, \`stats\`, \`help\`. Use \`<command> <username>\` to specify a player.`;
+  return `Available commands: \`nw\`, \`cata\`, \`lvl\`, \`check\`, \`stats\`, \`pb\`, \`help\`. Use \`<command> <username>\` to specify a player.`;
 });
