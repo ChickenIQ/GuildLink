@@ -5,9 +5,9 @@ import cache from "memory-cache";
 
 export type SkyBlockStats = {
   catacombs: number;
-  M7Stats: M7Stats;
   networth: number;
   level: number;
+  M7: M7Stats;
 };
 
 export type M7Stats = {
@@ -142,7 +142,7 @@ export class HypixelAPIHandler {
       catacombs: await this.getCatacombsLevel(uuid),
       level: await this.getSkyBlockLevel(uuid),
       networth: await this.getNetworth(uuid),
-      M7Stats: await this.getM7Stats(uuid),
+      M7: await this.getM7Stats(uuid),
     };
   }
 }
