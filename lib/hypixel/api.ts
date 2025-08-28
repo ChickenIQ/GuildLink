@@ -132,8 +132,8 @@ export class HypixelAPIHandler {
     const dungeon = profile?.members[uuid]?.dungeons?.dungeon_types;
 
     return {
+      completions: dungeon?.master_catacombs?.tier_completions?.["7"] || 0,
       personalBest: dungeon?.master_catacombs?.fastest_time?.["7"] || 0,
-      completions: dungeon?.master_catacombs?.tier_completions || 0,
     };
   }
 
