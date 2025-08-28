@@ -5,8 +5,14 @@ import cache from "memory-cache";
 
 export type SkyBlockStats = {
   catacombs: number;
+  M7Stats: M7Stats;
   networth: number;
   level: number;
+};
+
+export type M7Stats = {
+  personalBest: number;
+  completions: number;
 };
 
 export class HypixelAPIHandler {
@@ -121,11 +127,14 @@ export class HypixelAPIHandler {
     return calcXpCatacombs(cata?.experience || 0);
   }
 
-  async getM7PersonalBest(uuid: string): Promise<number> {
+  async getM7Stats(uuid: string): Promise<M7Stats> {
     const profile = await this.getSkyblockProfile(uuid);
     const dungeon = profile?.members[uuid]?.dungeons?.dungeon_types;
 
-    return dungeon?.master_catacombs?.fastest_time?.["7"] || 0;
+    return {
+      personalBest: dungeon?.master_catacombs?.personal_best?.["7"] || 0,
+      completions: dungeon?.master_catacombs?.completions || 0,
+    };
   }
 
   async getSkyBlockStats(uuid: string): Promise<SkyBlockStats> {
@@ -133,6 +142,7 @@ export class HypixelAPIHandler {
       catacombs: await this.getCatacombsLevel(uuid),
       level: await this.getSkyBlockLevel(uuid),
       networth: await this.getNetworth(uuid),
+      M7Stats: await this.getM7Stats(uuid),
     };
   }
 }
