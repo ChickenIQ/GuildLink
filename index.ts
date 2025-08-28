@@ -100,7 +100,7 @@ guildBot.registerCommand(["pb"], async (username, args) => {
   if (stats.personalBest == 0) return `${mc.name} has no M7 PB.`;
 
   const pb = formatTime(stats.personalBest);
-  return `M7 PB for ${mc.name}: ${pb} (${stats.completions} runs)`;
+  return `M7 PB for ${mc.name}: ${pb} (${stats.completions} Runs)`;
 });
 
 guildBot.registerCommand(["help", "commands"], async () => {
