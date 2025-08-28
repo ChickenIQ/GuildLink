@@ -133,7 +133,7 @@ export class HypixelAPIHandler {
 
     return {
       personalBest: dungeon?.master_catacombs?.personal_best?.["7"] || 0,
-      completions: dungeon?.master_catacombs?.completions || 0,
+      completions: dungeon?.master_catacombs?.tier_completions || 0,
     };
   }
 
