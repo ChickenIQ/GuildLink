@@ -53,9 +53,7 @@ guildBot.registerCommand(["cata", "catacombs"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
   const cata = await hypixelAPI.getDungeonsStats(mc.uuid);
 
-  return `Catacombs Level for ${mc.name}: ${cata.catacombsLevel} (Class: ${cata.selectedClass} Lvl ${cata.selectedClassLevel}, Avg: ${
-    cata.classAverage
-  }) M7 PB: ${cata.M7.formattedPB} (${cata.M7.completions || 0} Runs)`;
+  return `Cata Level for ${mc.name}: ${cata.catacombsLevel} (Class: ${cata.selectedClass} Lvl ${cata.selectedClassLevel}, Avg: ${cata.classAverage}) M7 PB: ${cata.M7.formattedPB} (${cata.M7.completions} Runs)`;
 });
 
 guildBot.registerCommand(["lvl", "level"], async (username, args) => {
@@ -95,5 +93,5 @@ guildBot.registerCommand(["stats", "stat"], async (username, args) => {
 });
 
 guildBot.registerCommand(["help", "commands"], async () => {
-  return `Available commands: \`nw\`, \`cata\`, \`lvl\`, \`check\`, \`stats\`, \`pb\`, \`help\`. Use \`<command> <username>\` to specify a player.`;
+  return `Available commands: \`nw\`, \`cata\`, \`lvl\`, \`check\`, \`stats\`, \`help\`. Use \`<command> <username>\` to specify a player.`;
 });
