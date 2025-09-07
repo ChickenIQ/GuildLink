@@ -2,17 +2,37 @@ import { ProfileNetworthCalculator } from "skyhelper-networth";
 import { calcXpCatacombs } from "./utils";
 import { safe } from "../generic/safe";
 import cache from "memory-cache";
+import { formatTime } from "../generic/math";
 
-export type SkyBlockStats = {
-  catacombs: number;
-  networth: number;
-  level: number;
-  M7: M7Stats;
+export type DungeonClasses = {
+  berserk: number;
+  archer: number;
+  healer: number;
+  mage: number;
+  tank: number;
 };
 
-export type M7Stats = {
-  personalBest: number;
-  completions: number;
+export type DungeonsStats = {
+  catacombsLevel: number;
+  classLevel: DungeonClasses;
+
+  selectedClassLevel: number;
+  selectedClass: string;
+
+  secretsFound: number;
+  classAverage: number;
+
+  M7: {
+    formattedPB: string;
+    completions: number;
+    personalBest: number;
+  };
+};
+
+export type SkyBlockStats = {
+  dungeons: DungeonsStats;
+  networth: number;
+  level: number;
 };
 
 export class HypixelAPIHandler {
@@ -28,9 +48,7 @@ export class HypixelAPIHandler {
     });
 
     if (!res.ok) {
-      throw new Error(
-        `Failed to fetch data from ${url} (${res.status}): ${res.statusText}`
-      );
+      throw new Error(`Failed to fetch data from ${url} (${res.status}): ${res.statusText}`);
     }
 
     data = await res.json();
@@ -47,9 +65,7 @@ export class HypixelAPIHandler {
   async getDiscordUsername(uuid: string): Promise<string> {
     const [data, apiErr] = await safe(this.fetchAPI(`/player?uuid=${uuid}`));
     if (apiErr) {
-      throw new Error(
-        `Failed to Discord Username for UUID: ${uuid} - ${apiErr.message}`
-      );
+      throw new Error(`Failed to Discord Username for UUID: ${uuid} - ${apiErr.message}`);
     }
 
     const discord = data.player?.socialMedia?.links?.DISCORD;
@@ -59,18 +75,12 @@ export class HypixelAPIHandler {
   }
 
   async getSkyblockProfile(uuid: string): Promise<any> {
-    const [data, apiErr] = await safe(
-      this.fetchAPI(`/skyblock/profiles?uuid=${uuid}`)
-    );
+    const [data, apiErr] = await safe(this.fetchAPI(`/skyblock/profiles?uuid=${uuid}`));
     if (apiErr) {
-      throw new Error(
-        `Failed to fetch SkyBlock Profile for UUID: ${uuid} - ${apiErr.message}`
-      );
+      throw new Error(`Failed to fetch SkyBlock Profile for UUID: ${uuid} - ${apiErr.message}`);
     }
 
-    const profile = data.profiles.find(
-      (profile: { selected: boolean }) => profile.selected
-    );
+    const profile = data.profiles.find((profile: { selected: boolean }) => profile.selected);
 
     if (!profile) throw new Error(`No active profile found for ${uuid}`);
 
@@ -78,13 +88,9 @@ export class HypixelAPIHandler {
   }
 
   async getMuseum(profileID: string): Promise<any> {
-    const [data, apiErr] = await safe(
-      this.fetchAPI(`/skyblock/museum?profile=${profileID}`)
-    );
+    const [data, apiErr] = await safe(this.fetchAPI(`/skyblock/museum?profile=${profileID}`));
     if (apiErr) {
-      throw new Error(
-        `Failed to fetch Museum data for profile ID: ${profileID} - ${apiErr.message}`
-      );
+      throw new Error(`Failed to fetch Museum data for profile ID: ${profileID} - ${apiErr.message}`);
     }
 
     return data;
@@ -94,17 +100,11 @@ export class HypixelAPIHandler {
     const profile = await this.getSkyblockProfile(uuid);
     const museum = await this.getMuseum(profile.profile_id);
 
-    const networthManager = new ProfileNetworthCalculator(
-      profile.members[uuid],
-      museum.members[uuid],
-      profile.banking?.balance
-    );
+    const networthManager = new ProfileNetworthCalculator(profile.members[uuid], museum.members[uuid], profile.banking?.balance);
 
     const [nw, err] = await safe(networthManager.getNetworth());
     if (err) {
-      throw new Error(
-        `Failed to calculate networth for UUID: ${uuid} - ${err.message}`
-      );
+      throw new Error(`Failed to calculate networth for UUID: ${uuid} - ${err.message}`);
     }
 
     return nw.networth;
@@ -120,29 +120,40 @@ export class HypixelAPIHandler {
     return data.leveling.experience / 100;
   }
 
-  async getCatacombsLevel(uuid: string): Promise<number> {
+  async getDungeonsStats(uuid: string): Promise<DungeonsStats> {
     const profile = await this.getSkyblockProfile(uuid);
-    const cata = profile?.members[uuid]?.dungeons?.dungeon_types?.catacombs;
+    const dungeons = profile?.members[uuid]?.dungeons;
+    const M7 = dungeons?.dungeon_types?.master_catacombs;
 
-    return calcXpCatacombs(cata?.experience || 0);
-  }
+    const classLevels = Object.fromEntries(
+      ["healer", "mage", "tank", "berserk", "archer"].map((className) => [className, calcXpCatacombs(dungeons?.player_classes?.[className]?.experience || 0)])
+    ) as DungeonClasses;
 
-  async getM7Stats(uuid: string): Promise<M7Stats> {
-    const profile = await this.getSkyblockProfile(uuid);
-    const dungeon = profile?.members[uuid]?.dungeons?.dungeon_types;
+    const m7PB = M7?.fastest_time?.["7"] || null;
+    const m7Comps = M7?.tier_completions?.["7"] || null;
+    const selectedClass: string = dungeons?.selected_dungeon_class || "None";
+    const selectedClassLevel = selectedClass !== "None" ? classLevels[selectedClass as keyof DungeonClasses] : 0;
 
     return {
-      completions: dungeon?.master_catacombs?.tier_completions?.["7"] || 0,
-      personalBest: dungeon?.master_catacombs?.fastest_time?.["7"] || 0,
+      classAverage: Math.round((Object.values(classLevels).reduce((a, b) => a + b, 0) / 5) * 100) / 100,
+      catacombsLevel: calcXpCatacombs(dungeons?.dungeon_types.catacombs.experience || 0),
+      selectedClass: selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1),
+      selectedClassLevel: selectedClassLevel,
+      secretsFound: dungeons?.secrets || 0,
+      classLevel: classLevels,
+      M7: {
+        formattedPB: m7PB ? formatTime(m7PB) : "N/A",
+        completions: m7Comps || 0,
+        personalBest: m7PB,
+      },
     };
   }
 
   async getSkyBlockStats(uuid: string): Promise<SkyBlockStats> {
     return {
-      catacombs: await this.getCatacombsLevel(uuid),
+      dungeons: await this.getDungeonsStats(uuid),
       level: await this.getSkyBlockLevel(uuid),
       networth: await this.getNetworth(uuid),
-      M7: await this.getM7Stats(uuid),
     };
   }
 }

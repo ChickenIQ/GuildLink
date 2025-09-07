@@ -51,10 +51,7 @@ export class GuildBot {
     });
   }
 
-  registerCommand(
-    aliases: string[],
-    callback: (username: string, args: string[]) => Promise<string>
-  ) {
+  registerCommand(aliases: string[], callback: (username: string, args: string[]) => Promise<string>) {
     this.onGuildMessage(async (message) => {
       if (!message.content.startsWith("!")) return;
       const args = message.content.split(" ");

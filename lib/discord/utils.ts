@@ -18,10 +18,7 @@ export const parseMessageContent = (message: Message) => {
   message.mentions.members?.forEach((member) => {
     const nickname = member.nickname || member.displayName;
 
-    message.content = message.content.replace(
-      `<@${member.id}>`,
-      `@${nickname}`
-    );
+    message.content = message.content.replace(`<@${member.id}>`, `@${nickname}`);
   });
 
   return message.content;

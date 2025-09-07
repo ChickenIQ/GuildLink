@@ -51,9 +51,11 @@ guildBot.registerCommand(["nw", "networth"], async (username, args) => {
 
 guildBot.registerCommand(["cata", "catacombs"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
-  const cata = await hypixelAPI.getCatacombsLevel(mc.uuid);
+  const cata = await hypixelAPI.getDungeonsStats(mc.uuid);
 
-  return `Catacombs Level for ${mc.name}: ${cata!.toFixed(2)}`;
+  return `Catacombs Level for ${mc.name}: ${cata.catacombsLevel} (Class: ${cata.selectedClass} Lvl ${cata.selectedClassLevel}, Avg: ${
+    cata.classAverage
+  }) M7 PB: ${cata.M7.formattedPB} (${cata.M7.completions || 0} Runs)`;
 });
 
 guildBot.registerCommand(["lvl", "level"], async (username, args) => {
@@ -68,15 +70,10 @@ guildBot.registerCommand(["check", "gcheck"], async (username, args) => {
 
   const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
   const nwText = formatNumber(stats.networth);
-  const cataText = stats.catacombs.toFixed(2);
 
-  const output = `Skyblock Level: ${stats.level}, Catacombs Level: ${cataText}, Networth: ${nwText}`;
+  const output = `Skyblock Level: ${stats.level}, Catacombs Level: ${stats.dungeons.catacombsLevel}, Networth: ${nwText}`;
 
-  if (
-    stats.level < 250 &&
-    stats.catacombs < 44 &&
-    stats.networth < 9_000_000_000
-  ) {
+  if (stats.level < 250 && stats.dungeons.catacombsLevel < 44 && stats.networth < 9_000_000_000) {
     return `${mc.name} does not meet the requirements: ${output}`;
   }
 
@@ -86,21 +83,15 @@ guildBot.registerCommand(["check", "gcheck"], async (username, args) => {
 guildBot.registerCommand(["stats", "stat"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
   const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
+
+  const m7PB = stats.dungeons.M7.formattedPB;
+  const M7Comps = stats.dungeons.M7.completions || 0;
+
+  const cataLvl = stats.dungeons.catacombsLevel;
+  const classAvg = stats.dungeons.classAverage;
   const nwText = formatNumber(stats.networth);
-  const cataText = stats.catacombs.toFixed(2);
-  const m7pb = stats.M7.personalBest;
-  const m7pbText = m7pb == 0 ? "N/A" : formatTime(m7pb);
 
-  return `Stats for ${mc.name}: Skyblock Level: ${stats.level}, Catacombs Level: ${cataText}, Networth: ${nwText}, M7 PB: ${m7pbText}`;
-});
-
-guildBot.registerCommand(["pb"], async (username, args) => {
-  const mc = await getMinecraft(args[0] || username);
-  const stats = await hypixelAPI.getM7Stats(mc.uuid);
-  if (stats.personalBest == 0) return `${mc.name} has no M7 PB.`;
-
-  const pb = formatTime(stats.personalBest);
-  return `M7 PB for ${mc.name}: ${pb} (${stats.completions} Runs)`;
+  return `Stats for ${mc.name}: Level: ${stats.level}, Networth: ${nwText}, Cata Level: ${cataLvl}, Class Average ${classAvg}, M7 PB: ${m7PB} (${M7Comps} Runs)`;
 });
 
 guildBot.registerCommand(["help", "commands"], async () => {

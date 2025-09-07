@@ -1,19 +1,8 @@
 import { getMessageUsername, parseMessageContent } from "./utils";
 
-import {
-  Events,
-  Client,
-  Message,
-  WebhookClient,
-  GatewayIntentBits,
-} from "discord.js";
+import { Events, Client, Message, WebhookClient, GatewayIntentBits } from "discord.js";
 
-const intents = [
-  GatewayIntentBits.MessageContent,
-  GatewayIntentBits.GuildMessages,
-  GatewayIntentBits.GuildMembers,
-  GatewayIntentBits.Guilds,
-];
+const intents = [GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.Guilds];
 
 export type DiscordBotConfig = {
   webhookURL: string;
@@ -82,9 +71,7 @@ export class DiscordBot {
     const guild = await this.client.guilds.fetch(this.guildID);
     if (!guild) return;
 
-    return (await guild.members.fetch()).find(
-      (member) => member.user.username === username
-    );
+    return (await guild.members.fetch()).find((member) => member.user.username === username);
   };
 
   getClient = () => this.client;

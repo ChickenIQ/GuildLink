@@ -5,20 +5,14 @@ export type MinecraftProfile = {
   uuid: string;
 };
 
-export const getMinecraft = async (
-  username: string
-): Promise<MinecraftProfile> => {
+export const getMinecraft = async (username: string): Promise<MinecraftProfile> => {
   let data = cache.get(`mc:${username}`);
   if (data) return data;
 
-  const res = await fetch(
-    `https://api.mojang.com/users/profiles/minecraft/${username}`
-  );
+  const res = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
 
   if (!res.ok) {
-    throw new Error(
-      `Failed to fetch UUID for ${username} (${res.status}): ${res.statusText}`
-    );
+    throw new Error(`Failed to fetch UUID for ${username} (${res.status}): ${res.statusText}`);
   }
 
   data = await res.json();
