@@ -31,7 +31,6 @@ export type DungeonsStats = {
 
 export type SkyBlockStats = {
   dungeons: DungeonsStats;
-  networth: number;
   level: number;
 };
 
@@ -153,7 +152,6 @@ export class HypixelAPIHandler {
     return {
       dungeons: await this.getDungeonsStats(uuid),
       level: await this.getSkyBlockLevel(uuid),
-      networth: await this.getNetworth(uuid),
     };
   }
 }

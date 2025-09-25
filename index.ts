@@ -1,7 +1,7 @@
-import { formatTime, formatNumber } from "./lib/generic/math";
 import { getReferencedUsername } from "./lib/discord/utils";
 import { HypixelAPIHandler } from "./lib/hypixel/api";
 import { getMinecraft } from "./lib/minecraft/utils";
+import { formatNumber } from "./lib/generic/math";
 import { DiscordBot } from "./lib/discord/bot";
 import { GuildBot } from "./lib/minecraft/bot";
 
@@ -65,13 +65,10 @@ guildBot.registerCommand(["lvl", "level"], async (username, args) => {
 
 guildBot.registerCommand(["check", "gcheck"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
-
   const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
-  const nwText = formatNumber(stats.networth);
 
-  const output = `Skyblock Level: ${stats.level}, Catacombs Level: ${stats.dungeons.catacombsLevel}, Networth: ${nwText}`;
-
-  if (stats.level < 250 && stats.dungeons.catacombsLevel < 44 && stats.networth < 9_000_000_000) {
+  const output = `Skyblock Level: ${stats.level}, Catacombs Level: ${stats.dungeons.catacombsLevel}`;
+  if (stats.level < 350 && stats.dungeons.catacombsLevel < 47) {
     return `${mc.name} does not meet the requirements: ${output}`;
   }
 
@@ -81,15 +78,15 @@ guildBot.registerCommand(["check", "gcheck"], async (username, args) => {
 guildBot.registerCommand(["stats", "stat"], async (username, args) => {
   const mc = await getMinecraft(args[0] || username);
   const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
+  const networth = formatNumber(await hypixelAPI.getNetworth(mc.uuid));
 
   const m7PB = stats.dungeons.M7.formattedPB;
   const M7Comps = stats.dungeons.M7.completions || 0;
 
   const cataLvl = stats.dungeons.catacombsLevel;
   const classAvg = stats.dungeons.classAverage;
-  const nwText = formatNumber(stats.networth);
 
-  return `Stats for ${mc.name}: Level: ${stats.level}, Networth: ${nwText}, Cata Level: ${cataLvl}, Class Average ${classAvg}, M7 PB: ${m7PB} (${M7Comps} Runs)`;
+  return `Stats for ${mc.name}: Level: ${stats.level}, Networth: ${networth}, Cata Level: ${cataLvl}, Class Average ${classAvg}, M7 PB: ${m7PB} (${M7Comps} Runs)`;
 });
 
 guildBot.registerCommand(["help", "commands"], async () => {
