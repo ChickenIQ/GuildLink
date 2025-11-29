@@ -7,15 +7,15 @@
     "start": "bun run index.ts"
   },
   "devDependencies": {
-    "@types/bun": "^1.2.21"
+    "@types/bun": "^1.3.3"
   },
   "peerDependencies": {
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "discord.js": "^14.22.1",
+    "discord.js": "^14.25.1",
     "memory-cache": "^0.2.0",
     "mineflayer": "^4.33.0",
-    "skyhelper-networth": "^2.4.3"
+    "skyhelper-networth": "^2.5.1"
   }
 }
