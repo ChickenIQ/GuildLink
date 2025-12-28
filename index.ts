@@ -8,13 +8,13 @@ import { GuildBot } from "./lib/minecraft/bot";
 // Fix this later...
 if (!process.env.WEBHOOK_URL) throw new Error("$WEBHOOK_URL is not set!");
 if (!process.env.CHANNEL_ID) throw new Error("$CHANNEL_ID is not set!");
+if (!process.env.USERNAMES) throw new Error("$USERNAMES is not set!");
 if (!process.env.GUILD_ID) throw new Error("$GUILD_ID is not set!");
-if (!process.env.TOKEN) throw new Error("$TOKEN is not set!");
-if (!process.env.USERNAME) throw new Error("$WEBHOOK_URL is not set!");
 if (!process.env.API_KEY) throw new Error("$API_KEY is not set!");
+if (!process.env.TOKEN) throw new Error("$TOKEN is not set!");
 
+const guildBots = process.env.USERNAMES.split(",").map((username) => new GuildBot(username.trim()));
 const hypixelAPI = new HypixelAPIHandler(process.env.API_KEY);
-const guildBot = new GuildBot(process.env.USERNAME);
 const discordBot = new DiscordBot({
   webhookURL: process.env.WEBHOOK_URL,
   channelID: process.env.CHANNEL_ID,
@@ -29,66 +29,79 @@ discordBot.onMessage(async (message) => {
     message.author = message.author + "➡" + referencedName;
   }
 
-  return guildBot.sendMessageAsUser(message.author, message.content);
+  return Promise.all(guildBots.map((bot) => bot.sendMessageAsUser(message.author, message.content)));
 });
 
-// Guild Message Handler
-guildBot.onMessage(async (message) => {
-  return discordBot.sendMessageAsUser({
-    content: message.content.replace(/@everyone|@here|<@!?[0-9]+>/g, ""),
-    avatarURL: `https://mc-heads.net/avatar/${message.author}/128`,
-    author: message.author,
+guildBots.forEach((bot) => {
+  // Guild to guilds message handler
+  bot.onMessage(async (message) => {
+    return Promise.all(
+      guildBots.map((otherBot) => {
+        if (otherBot === bot) return;
+
+        return otherBot.sendMessageAsUser(message.author, message.content);
+      })
+    );
   });
-});
 
-// Command Handlers
-guildBot.registerCommand(["nw", "networth"], async (username, args) => {
-  const mc = await getMinecraft(args[0] || username);
-  const nw = await hypixelAPI.getNetworth(mc.uuid);
+  // Guild to discord message handler
+  bot.onMessage(async (message) => {
+    return discordBot.sendMessageAsUser({
+      content: message.content.replace(/@everyone|@here|<@!?[0-9]+>/g, ""),
+      avatarURL: `https://mc-heads.net/avatar/${message.author}/128`,
+      author: message.author,
+    });
+  });
 
-  return `Networth for ${mc.name}: ${formatNumber(nw)}`;
-});
+  // Command Handlers
+  bot.registerCommand(["nw", "networth"], async (username, args) => {
+    const mc = await getMinecraft(args[0] || username);
+    const nw = await hypixelAPI.getNetworth(mc.uuid);
 
-guildBot.registerCommand(["cata", "catacombs"], async (username, args) => {
-  const mc = await getMinecraft(args[0] || username);
-  const cata = await hypixelAPI.getDungeonsStats(mc.uuid);
+    return `Networth for ${mc.name}: ${formatNumber(nw)}`;
+  });
 
-  return `Cata Level for ${mc.name}: ${cata.catacombsLevel} (Class: ${cata.selectedClass} Lvl ${cata.selectedClassLevel}, Avg: ${cata.classAverage}) M7 PB: ${cata.M7.formattedPB} (${cata.M7.completions} Runs)`;
-});
+  bot.registerCommand(["cata", "catacombs"], async (username, args) => {
+    const mc = await getMinecraft(args[0] || username);
+    const cata = await hypixelAPI.getDungeonsStats(mc.uuid);
 
-guildBot.registerCommand(["lvl", "level"], async (username, args) => {
-  const mc = await getMinecraft(args[0] || username);
-  const level = await hypixelAPI.getSkyBlockLevel(mc.uuid);
+    return `Cata Level for ${mc.name}: ${cata.catacombsLevel} (Class: ${cata.selectedClass} Lvl ${cata.selectedClassLevel}, Avg: ${cata.classAverage}) M7 PB: ${cata.M7.formattedPB} (${cata.M7.completions} Runs)`;
+  });
 
-  return `Skyblock Level for ${mc.name}: ${level}`;
-});
+  bot.registerCommand(["lvl", "level"], async (username, args) => {
+    const mc = await getMinecraft(args[0] || username);
+    const level = await hypixelAPI.getSkyBlockLevel(mc.uuid);
 
-guildBot.registerCommand(["check", "gcheck"], async (username, args) => {
-  const mc = await getMinecraft(args[0] || username);
-  const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
+    return `Skyblock Level for ${mc.name}: ${level}`;
+  });
 
-  const output = `Skyblock Level: ${stats.level}, Catacombs Level: ${stats.dungeons.catacombsLevel}`;
-  if (stats.level < 350 && stats.dungeons.catacombsLevel < 47) {
-    return `${mc.name} does not meet the requirements: ${output}`;
-  }
+  bot.registerCommand(["check", "gcheck"], async (username, args) => {
+    const mc = await getMinecraft(args[0] || username);
+    const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
 
-  return `${mc.name} meets the requirements: ${output}`;
-});
+    const output = `Skyblock Level: ${stats.level}, Catacombs Level: ${stats.dungeons.catacombsLevel}`;
+    if (stats.level < 350 && stats.dungeons.catacombsLevel < 47) {
+      return `${mc.name} does not meet the requirements: ${output}`;
+    }
 
-guildBot.registerCommand(["stats", "stat"], async (username, args) => {
-  const mc = await getMinecraft(args[0] || username);
-  const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
-  const networth = formatNumber(await hypixelAPI.getNetworth(mc.uuid));
+    return `${mc.name} meets the requirements: ${output}`;
+  });
 
-  const m7PB = stats.dungeons.M7.formattedPB;
-  const M7Comps = stats.dungeons.M7.completions || 0;
+  bot.registerCommand(["stats", "stat"], async (username, args) => {
+    const mc = await getMinecraft(args[0] || username);
+    const stats = await hypixelAPI.getSkyBlockStats(mc.uuid);
+    const networth = formatNumber(await hypixelAPI.getNetworth(mc.uuid));
 
-  const cataLvl = stats.dungeons.catacombsLevel;
-  const classAvg = stats.dungeons.classAverage;
+    const m7PB = stats.dungeons.M7.formattedPB;
+    const M7Comps = stats.dungeons.M7.completions || 0;
 
-  return `Stats for ${mc.name}: Level: ${stats.level}, Networth: ${networth}, Cata Level: ${cataLvl}, Class Average ${classAvg}, M7 PB: ${m7PB} (${M7Comps} Runs)`;
-});
+    const cataLvl = stats.dungeons.catacombsLevel;
+    const classAvg = stats.dungeons.classAverage;
 
-guildBot.registerCommand(["help", "commands"], async () => {
-  return `Available commands: \`nw\`, \`cata\`, \`lvl\`, \`check\`, \`stats\`, \`help\`. Use \`<command> <username>\` to specify a player.`;
+    return `Stats for ${mc.name}: Level: ${stats.level}, Networth: ${networth}, Cata Level: ${cataLvl}, Class Average ${classAvg}, M7 PB: ${m7PB} (${M7Comps} Runs)`;
+  });
+
+  bot.registerCommand(["help", "commands"], async () => {
+    return `Available commands: \`nw\`, \`cata\`, \`lvl\`, \`check\`, \`stats\`, \`help\`. Use \`<command> <username>\` to specify a player.`;
+  });
 });
